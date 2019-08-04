@@ -1,0 +1,4 @@
+Add comment to the code.
+Organize the code, refactoring.
+Create a Makefile.
+Impliment options and user input from the args.
