@@ -12,11 +12,14 @@ void print_usage(){
 		"usage: spr text\n");
 }
 
-// return the lower or upper char
-// for example for 'a' return 'A'
-struct CharOptions *getLUChar(char c){
+/*
+	Return all the option of stable permutation of a char.
+	for regualr latter, for example a is a, A
+	and for any digit will be 0-9
+*/
+struct CharOptions* get_char_options(char c){
 
-	struct CharOptions *chars = (struct CharOptions*)malloc(sizeof(struct CharOptions));
+	struct CharOptions* chars = (struct CharOptions*)malloc(sizeof(struct CharOptions));
 	char tmp_c;
 
 	// numbers
@@ -44,27 +47,35 @@ struct CharOptions *getLUChar(char c){
 	return chars;
 }
 
-void init_char_list(char c, struct LinkList* linkList){
+/*
+	Initialize the list with a char and all of its options
+*/
+void init_char_list(char c, struct LinkedList* linked_List){
 
-	struct CharOptions *chars = getLUChar(c);
+	struct CharOptions *chars = get_char_options(c);
 	for(int i=0; i < chars->size-1; i=i+1){
 		char str[2] = {(chars->options)[i], '\0'};
-		append(linkList, str, 2);
+		append(linked_List, str, 2);
 	}
 }
 
-struct LinkList *permutation(char *str, int size){
+/*
+	Create a list with all the stable permutation of a string.
+	Use for longer string.
+	Return - linked list with all the stable permutation
+*/
+struct LinkedList* permutation(char *str, int size){
 	// options of the start char
-	struct LinkList *linkList = createEmptyLinkList();
+	struct LinkedList* linked_list = create_empty_linked_list();
 
-	init_char_list(*str, linkList);
+	init_char_list(*str, linked_list);
 	str = str + 1;
 	
 	for(int i=1; i < size - 1; i=i+1){
-		struct CharOptions *chars = getLUChar(*(str+i-1));
-		struct LinkList *tmpList = createEmptyLinkList();
+		struct CharOptions* chars = get_char_options(*(str+i-1));
+		struct LinkedList* tmpList = create_empty_linked_list();
 		for(int j=0; j < chars->size - 1; j=j+1){
-			struct Link* current = linkList->head;
+			struct Link* current = linked_list->head;
 			while(current != NULL){
 				 // the current lenght of the linkList ithems and the added one
 				// and the null byte
@@ -73,21 +84,53 @@ struct LinkList *permutation(char *str, int size){
 				char op[2] = {(chars->options)[j], '\0'};
 				strncpy(str + i, op, 2);
 				append(tmpList, str, i+2);
-				current = current->nextLink;
+				current = current->next_link;
 			}
 		}
-		deleteList(linkList);
-		linkList = tmpList;
+		delete_list(linked_list);
+		linked_list = tmpList;
 	}
 
-	return linkList;
+	return linked_list;
+
+}
+
+/*
+	The wrapper function that call to perm_rec a recursion
+	function, that prints all the permutations.
+	Use for shorter strings.
+*/
+void permutation_recursion(char* str, int size){
+	char build_str[size];
+	build_str[size-1] = '\0';
+	perm_rec(str, build_str, size-1, size-1);
+}
+
+void perm_rec(char* str, char* build_str, int at, int size){
+	if(at == 0)
+	{
+		printf("%s\n", build_str);
+	}
+	else {
+		char c = *str;
+		struct CharOptions* chars = get_char_options(c);
+		str = str + 1;
+		at = at - 1;
+		for(int i=0; i< chars->size-1; i=i+1){
+			build_str[size-at-1] = (chars->options)[i];
+			perm_rec(str, build_str, at, size);
+		}
+	}
 
 }
 
 void stable_main(int argc, char *argv[]){
-	struct LinkList* list;
-	char str[4] = {'a', 'b', '5', '\0'};
-	list = permutation(str, 4);
-	printList(list);
+	//struct LinkedList* list;
+	char str[10] = {'a', 'b', '5',
+			'a', 'b', '5',
+			'a', 'b', '5', '\0'};
+	//list = permutation(str, 10);
+	//print_list(list);
+	permutation_recursion(str, 10);
 	
 }

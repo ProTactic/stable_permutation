@@ -1,19 +1,19 @@
 #ifndef _LINKLIST_H_
 #define _LINKLIST_H_
 
-struct LinkList{
+struct LinkedList{
 	struct Link *head;
 	struct Link *end;
 };
 
-struct LinkList * createEmptyLinkList();
+struct LinkedList * create_empty_linked_list();
 
-struct LinkList * createLinkList(char* c, int size);
+struct LinkedList * create_link_list(char* c, int size);
 
-void append(struct LinkList *list, char* c, int size);
+void append(struct LinkedList *list, char* c, int size);
 
-void deleteList(struct LinkList *linkList);
+void delete_list(struct LinkedList *linked_List);
 
-void printList(struct LinkList *linkList);
+void print_list(struct LinkedList *linked_List);
 
 #endif

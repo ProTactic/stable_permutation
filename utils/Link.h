@@ -3,11 +3,11 @@
 
 struct Link{
 	char* c;
-	struct Link *nextLink;
+	struct Link* next_link;
 };
 
-struct Link *createLink(char* c, int size);
+struct Link *create_link(char* c, int size);
 
-struct Link *createLink2(char* c, int size, struct Link *next);
+struct Link *create_link2(char* c, int size, struct Link *next);
 
 #endif

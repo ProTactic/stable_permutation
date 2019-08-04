@@ -10,11 +10,15 @@ struct CharOptions{
 
 void print_usage();
 
-struct CharOptions *getLUChar(char c);
+struct CharOptions *get_char_options(char c);
 
-void init_char_list(char c, struct LinkList* linkList);
+void init_char_list(char c, struct LinkedList* linked_List);
 
-struct LinkList *permutation(char *str, int size);
+struct LinkedList *permutation(char *str, int size);
+
+void permutation_recursion(char* str, int size);
+
+void perm_rec(char* str, char* bulid_str, int at, int size);
 
 void stable_main(int argc, char *argv[]);
 
