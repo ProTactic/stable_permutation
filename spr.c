@@ -29,7 +29,7 @@ struct CharOptions* get_char_options(char c){
 	char tmp_c;
 
 	// numbers
-	if(c > 47 & c < 58){
+	if((c > 47) & (c < 58)){
 		if(!flag_excludeDigits){ 
 			chars->size = 11;
 			chars->options = (char *)malloc(chars->size);
@@ -43,13 +43,13 @@ struct CharOptions* get_char_options(char c){
 			(chars->options)[0] = c; (chars->options)[1] = '\0';
 		}
 	}
-	else if(c > 96 & c < 123){
+	else if((c > 96) & (c < 123)){
 		tmp_c = c - 32;
 		chars->size = 3;
 		chars->options = (char *)malloc(chars->size);
 		(chars->options)[0] = c; (chars->options)[1] = tmp_c; (chars->options)[2] = '\0';
 	}
-	else if(c > 64 & c < 91){
+	else if((c > 64) & (c < 91)){
 		tmp_c = c + 32;
 		chars->size = 3;
 		chars->options = (char *)malloc(chars->size);
@@ -148,7 +148,7 @@ void stable_main(int argc, char *argv[]){
           	{0, 0, 0, 0}
         };
 
-  	while (c = getopt_long (argc, argv, "e:", long_options, &option_index))
+  	while ((c = getopt_long (argc, argv, "e:", long_options, &option_index)))
     	{
       		if (c == -1)
         		break;

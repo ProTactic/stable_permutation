@@ -1,4 +1,4 @@
 Organize the code, refactoring.
-Create a Makefile.
+Improve the makefile
 Impliment options and user input from the args.
 Implement progressBar for long strings.
