@@ -20,6 +20,8 @@ void permutation_recursion(char* str, int size);
 
 void perm_rec(char* str, char* bulid_str, int at, int size);
 
+
+
 void stable_main(int argc, char *argv[]);
 
 #endif

@@ -1,15 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "spr.h"
 #include "utils/LinkList.h"
 #include "utils/Link.h"
 
+int flag_excludeDigits = 0;
+
 void print_usage(){
-	printf("%s ",
+	printf("%s",
 		"This is the stable permutaion software\n"
-		"usage: spr text\n");
+		"usage: spr [Options] ... words\n\n"
+		"Mandatory arguments to long options are mandatory for short options too.\n"
+		"	-e  --exclude <option to exclude> :\n"
+		"		option to exclude: D for digits\n");
 }
 
 /*
@@ -24,12 +30,18 @@ struct CharOptions* get_char_options(char c){
 
 	// numbers
 	if(c > 47 & c < 58){
-		chars->size = 11;
-		chars->options = (char *)malloc(chars->size);
-		for(int i=0; i < chars->size-1; i=i+1){
-			(chars->options)[i] = i+48;
+		if(!flag_excludeDigits){ 
+			chars->size = 11;
+			chars->options = (char *)malloc(chars->size);
+			for(int i=0; i < chars->size-1; i=i+1){
+				(chars->options)[i] = i+48;
+			}
+			(chars->options)[10] = '\0';
+		} else {
+			chars->size = 2;
+			chars->options = (char *)malloc(chars->size);
+			(chars->options)[0] = c; (chars->options)[1] = '\0';
 		}
-		(chars->options)[10] = '\0';
 	}
 	else if(c > 96 & c < 123){
 		tmp_c = c - 32;
@@ -125,12 +137,56 @@ void perm_rec(char* str, char* build_str, int at, int size){
 }
 
 void stable_main(int argc, char *argv[]){
-	//struct LinkedList* list;
-	char str[10] = {'a', 'b', '5',
-			'a', 'b', '5',
-			'a', 'b', '5', '\0'};
-	//list = permutation(str, 10);
-	//print_list(list);
-	permutation_recursion(str, 10);
+
+	int c;
+	int option_index = 0;
+	char* p;
+
+	static struct option long_options[] =
+        {
+		{"exclude", required_argument,  0, 'e'},
+          	{0, 0, 0, 0}
+        };
+
+  	while (c = getopt_long (argc, argv, "e:", long_options, &option_index))
+    	{
+      		if (c == -1)
+        		break;
+
+      		switch (c)
+        	{
+			case 'e':
+				p = optarg;
+				while(*p){
+					switch(*p){
+						case 'D':
+							flag_excludeDigits = 1;	
+							break;
+					}
+					p = p + 1;
+				}
+
+			case '?':
+          			/* getopt_long already printed an error message. */
+          			break;
+        		default:
+				print_usage();
+          			exit(-1);
+        	}
+	};
+
+  	if (optind < argc)
+    	{
+      		while (optind < argc){
+			char* str = argv[optind++];
+			// the size with the null byte
+        		int size = strlen(str) + 1;
+			printf("Starting p of %s with size of %d\n\n", str, size-1);
+			if(size <= 12){
+				permutation_recursion(str, size);
+			}
+			printf("\n\n");	
+		}
+    	}
 	
 }
