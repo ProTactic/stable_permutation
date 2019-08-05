@@ -1,6 +1,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
 #include "LinkList.h"
 #include "Link.h"
 
@@ -70,11 +73,13 @@ void delete_list(struct LinkedList* linked_list){
 /*
 	Print the char array of each link in the list by order
 */
-void print_list(struct LinkedList *linked_list){
+void print_list(struct LinkedList *linked_list, int fd){
 	if(linked_list != NULL){
 		struct Link* current = linked_list->head;
 		while(current != NULL){
-			printf("%s\n", current->c);
+			//optimaize using size in the struct
+			write(fd, current->c, strlen(current->c));
+			write(fd, "\n", 1);
 			current = current->next_link;
 		}
 	}

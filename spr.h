@@ -10,6 +10,8 @@ struct CharOptions{
 
 void print_usage();
 
+void use_file(FILE *fp);
+
 unsigned long number_of_options(char* str, int size);
 
 int get_char_number_of_options(char c);

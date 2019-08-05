@@ -14,6 +14,6 @@ void append(struct LinkedList *list, char* c, int size);
 
 void delete_list(struct LinkedList *linked_List);
 
-void print_list(struct LinkedList *linked_List);
+void print_list(struct LinkedList *linked_List, int fd);
 
 #endif

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #include "spr.h"
 #include "utils/LinkList.h"
@@ -9,6 +10,7 @@
 
 int flag_excludeDigits = 0;
 int flag_excludeChars = 0;
+int fd = 1;
 
 void print_usage(){
 	printf("%s",
@@ -16,7 +18,15 @@ void print_usage(){
 		"usage: spr [Options] ... words\n\n"
 		"Mandatory arguments to long options are mandatory for short options too.\n"
 		"	-e  --exclude <option to exclude> :\n"
-		"		option to exclude: D for digits\n");
+		"		option to exclude: D for digits\n"
+		"				   C for english chars\n"
+		"	--write-to-file : saves the data to a file for example:\n"
+		"		for ./spr --write-to-file aa , create a file named permutation_aa.txt");
+}
+
+void use_file(FILE *fp)
+{
+  fd = fileno(fp);
 }
 
 /*
@@ -157,7 +167,8 @@ void permutation_recursion(char* str, int size){
 void perm_rec(char* str, char* build_str, int at, int size){
 	if(at == 0)
 	{
-		printf("%s\n", build_str);
+		write(fd, build_str, size);
+		write(fd, "\n", 1);
 	}
 	else {
 		char c = *str;
@@ -172,6 +183,8 @@ void perm_rec(char* str, char* build_str, int at, int size){
 
 }
 
+static int flag_save = 0;
+
 void stable_main(int argc, char *argv[]){
 
 	int c;
@@ -180,12 +193,12 @@ void stable_main(int argc, char *argv[]){
 
 	static struct option long_options[] =
         {
+		{"write-to-file", no_argument,  &flag_save, 1},
 		{"exclude", required_argument,  0, 'e'},
-		{"save-to-file", required_argument,  0, 's'}
           	{0, 0, 0, 0}
         };
 
-  	while ((c = getopt_long (argc, argv, "e:", long_options, &option_index)))
+  	while ((c = getopt_long (argc, argv, "we:", long_options, &option_index)))
     	{
       		if (c == -1)
         		break;
@@ -193,6 +206,7 @@ void stable_main(int argc, char *argv[]){
       		switch (c)
         	{
 			case 'e':
+			{
 				p = optarg;
 				while(*p){
 					switch(*p){
@@ -208,8 +222,7 @@ void stable_main(int argc, char *argv[]){
 					}
 					p = p + 1;
 				}
-			case 's':
-				break;
+			}
 			case '?':
           			/* getopt_long already printed an error message. */
           			break;
@@ -223,20 +236,27 @@ void stable_main(int argc, char *argv[]){
     	{
       		while (optind < argc){
 			char* str = argv[optind++];
+		        int size = strlen(str) + 1;
+			if(flag_save){
+				printf("%d\n", flag_save);
+  				char str2[strlen(str)+size];
+				sprintf(str2, "permutation_%s.txt", str);
+			  	FILE *fp = fopen(str2, "a");
+  				use_file(fp);
+			}
 			// the size with the null byte
-        		int size = strlen(str) + 1;
 			unsigned long op = number_of_options(str, size-1);
-			printf("Starting p of %s with %lu options\n\n", str, op);
+			printf("Starting p of %s with %lu options\n", str, op);
 			if(op < 10000){
 				permutation_recursion(str, size);
 			}
 			else{
 				struct LinkedList* linked_list = permutation(str, size);
-				print_list(linked_list);
+				print_list(linked_list, fd);
 				delete_list(linked_list);
-			}
-			printf("\n\n");	
+			}	
 		}
+		
     	}
 	
 }
