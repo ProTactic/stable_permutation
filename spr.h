@@ -10,6 +10,10 @@ struct CharOptions{
 
 void print_usage();
 
+unsigned long number_of_options(char* str, int size);
+
+int get_char_number_of_options(char c);
+
 struct CharOptions *get_char_options(char c);
 
 void init_char_list(char c, struct LinkedList* linked_List);

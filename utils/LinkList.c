@@ -60,6 +60,7 @@ void delete_list(struct LinkedList* linked_list){
 		while(current != NULL){
 			struct Link* tmp = current;
 			current = current->next_link;
+			free(tmp->c);
 			free(tmp);
 		}
 		free(linked_list);

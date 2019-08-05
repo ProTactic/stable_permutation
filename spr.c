@@ -8,6 +8,7 @@
 #include "utils/Link.h"
 
 int flag_excludeDigits = 0;
+int flag_excludeChars = 0;
 
 void print_usage(){
 	printf("%s",
@@ -16,6 +17,35 @@ void print_usage(){
 		"Mandatory arguments to long options are mandatory for short options too.\n"
 		"	-e  --exclude <option to exclude> :\n"
 		"		option to exclude: D for digits\n");
+}
+
+/*
+	Return the number of stable permutation the string have.
+*/
+unsigned long number_of_options(char* str, int size){
+	unsigned long op = 1;
+	while(size > 0){
+		op = op * get_char_number_of_options(*str);
+		size = size - 1;
+		str = str + 1;
+	}
+
+	return op;
+}
+
+/*
+	Return the number of option of a char.
+*/
+int get_char_number_of_options(char c){
+	int op = 1;
+
+	if(!flag_excludeDigits && (c > 47) & (c < 58)){
+		op = 10;
+	} else if(!flag_excludeChars && (((c > 96) & (c < 123)) || ((c > 64) & (c < 91)))){
+		op = 2;
+	}
+
+	return op;
 }
 
 /*
@@ -42,18 +72,24 @@ struct CharOptions* get_char_options(char c){
 			chars->options = (char *)malloc(chars->size);
 			(chars->options)[0] = c; (chars->options)[1] = '\0';
 		}
-	}
-	else if((c > 96) & (c < 123)){
-		tmp_c = c - 32;
-		chars->size = 3;
+	} else if(!flag_excludeChars){
+		if((c > 96) & (c < 123)){
+			tmp_c = c - 32;
+			chars->size = 3;
+			chars->options = (char *)malloc(chars->size);
+			(chars->options)[0] = c; (chars->options)[1] = tmp_c; (chars->options)[2] = '\0';
+		}
+		else if((c > 64) & (c < 91)){
+			tmp_c = c + 32;
+			chars->size = 3;
+			chars->options = (char *)malloc(chars->size);
+			(chars->options)[0] = tmp_c; (chars->options)[1] = c; (chars->options)[2] = '\0';
+		}
+	} 
+	else {
+		chars->size = 2;
 		chars->options = (char *)malloc(chars->size);
-		(chars->options)[0] = c; (chars->options)[1] = tmp_c; (chars->options)[2] = '\0';
-	}
-	else if((c > 64) & (c < 91)){
-		tmp_c = c + 32;
-		chars->size = 3;
-		chars->options = (char *)malloc(chars->size);
-		(chars->options)[0] = tmp_c; (chars->options)[1] = c; (chars->options)[2] = '\0';
+		(chars->options)[0] = c; (chars->options)[1] = '\0';
 	}
 
 	return chars;
@@ -145,6 +181,7 @@ void stable_main(int argc, char *argv[]){
 	static struct option long_options[] =
         {
 		{"exclude", required_argument,  0, 'e'},
+		{"save-to-file", required_argument,  0, 's'}
           	{0, 0, 0, 0}
         };
 
@@ -162,10 +199,17 @@ void stable_main(int argc, char *argv[]){
 						case 'D':
 							flag_excludeDigits = 1;	
 							break;
+						case 'C':
+							flag_excludeChars = 1;
+							break;
+						default:
+							print_usage();
+          						exit(-1);
 					}
 					p = p + 1;
 				}
-
+			case 's':
+				break;
 			case '?':
           			/* getopt_long already printed an error message. */
           			break;
@@ -181,9 +225,15 @@ void stable_main(int argc, char *argv[]){
 			char* str = argv[optind++];
 			// the size with the null byte
         		int size = strlen(str) + 1;
-			printf("Starting p of %s with size of %d\n\n", str, size-1);
-			if(size <= 12){
+			unsigned long op = number_of_options(str, size-1);
+			printf("Starting p of %s with %lu options\n\n", str, op);
+			if(op < 10000){
 				permutation_recursion(str, size);
+			}
+			else{
+				struct LinkedList* linked_list = permutation(str, size);
+				print_list(linked_list);
+				delete_list(linked_list);
 			}
 			printf("\n\n");	
 		}
