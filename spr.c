@@ -8,9 +8,9 @@
 #include "utils/LinkList.h"
 #include "utils/Link.h"
 
-int flag_excludeDigits = 0;
-int flag_excludeChars = 0;
-int fd = 1;
+static int flag_excludeDigits = 0;
+static int flag_excludeChars = 0;
+static int fd = 1;
 
 void print_usage(){
 	printf("%s",
@@ -19,9 +19,36 @@ void print_usage(){
 		"Mandatory arguments to long options are mandatory for short options too.\n"
 		"	-e  --exclude <option to exclude> :\n"
 		"		option to exclude: D for digits\n"
-		"				   C for english chars\n"
-		"	--write-to-file : saves the data to a file for example:\n"
-		"		for ./spr --write-to-file aa , create a file named permutation_aa.txt");
+		"				   C for english characters\n"
+		"	--write-to-file : saves the data to a file, for example:\n"
+		"		for spr --write-to-file aa , create a file named permutation_aa.txt\n\n");
+}
+
+void progress_data(char *str, unsigned long in, unsigned long total){
+	char* bar = create_bar(in, total);
+	printf("\r%s %s %lu/%lu", str, bar, in, total);
+	fflush(stdout);
+	free(bar);
+}
+
+char* create_bar(unsigned long in, unsigned long total){
+	double dev = (long double)in/(long double)total;
+	char* bar = (char*)malloc(23);
+	bar[0] = '[';
+	int at = 1;
+	while(0.0499 < dev){
+		bar[at] = '#';
+		dev = dev - 0.05;
+		at = at + 1;
+	}
+	while(at < 21){
+		bar[at] = '.';
+		at = at + 1;
+	}
+	bar[21] = ']';
+	bar[22] = '\0';
+
+	return bar;
 }
 
 void use_file(FILE *fp)
@@ -122,9 +149,11 @@ void init_char_list(char c, struct LinkedList* linked_List){
 	Use for longer string.
 	Return - linked list with all the stable permutation
 */
-struct LinkedList* permutation(char *str, int size){
+struct LinkedList* permutation(char *str, int size, unsigned long total){
 	// options of the start char
 	struct LinkedList* linked_list = create_empty_linked_list();
+	unsigned long num_words = 0;
+	unsigned long pace = 0.05 * total;
 
 	init_char_list(*str, linked_list);
 	str = str + 1;
@@ -135,7 +164,7 @@ struct LinkedList* permutation(char *str, int size){
 		for(int j=0; j < chars->size - 1; j=j+1){
 			struct Link* current = linked_list->head;
 			while(current != NULL){
-				 // the current lenght of the linkList ithems and the added one
+				 // the current lenght of the linkList items and the added one
 				// and the null byte
 				char str[i+2];
 				strncpy(str, current->c, i);
@@ -143,6 +172,14 @@ struct LinkedList* permutation(char *str, int size){
 				strncpy(str + i, op, 2);
 				append(tmpList, str, i+2);
 				current = current->next_link;
+			
+				if(i == size-2){
+					num_words = num_words + 1;
+					if(num_words == pace){
+						progress_data("Creating list:", num_words, total);
+						pace = pace + 0.05 * total;
+					}				
+				}
 			}
 		}
 		delete_list(linked_list);
@@ -158,13 +195,21 @@ struct LinkedList* permutation(char *str, int size){
 	function, that prints all the permutations.
 	Use for shorter strings.
 */
-void permutation_recursion(char* str, int size){
+void permutation_recursion(char* str, int size, unsigned long total_words){
 	char build_str[size];
 	build_str[size-1] = '\0';
-	perm_rec(str, build_str, size-1, size-1);
+	unsigned long num_words = 0;
+
+	if(fd == 1){
+		perm_rec(str, build_str, size-1, size-1, total_words, &num_words);
+	} else {
+		unsigned long pace = 0.05 * total_words;
+		perm_rec_to_file(str, build_str, size-1, size-1, total_words, &num_words, &pace);
+	}
 }
 
-void perm_rec(char* str, char* build_str, int at, int size){
+void perm_rec(char* str, char* build_str, int at, int size, 
+	unsigned long total_words, unsigned long* num_words){
 	if(at == 0)
 	{
 		write(fd, build_str, size);
@@ -177,7 +222,34 @@ void perm_rec(char* str, char* build_str, int at, int size){
 		at = at - 1;
 		for(int i=0; i< chars->size-1; i=i+1){
 			build_str[size-at-1] = (chars->options)[i];
-			perm_rec(str, build_str, at, size);
+			perm_rec(str, build_str, at, size, 
+					total_words, num_words);
+		}
+	}
+
+}
+
+void perm_rec_to_file(char* str, char* build_str, int at, int size, 
+	unsigned long total_words, unsigned long* num_words, unsigned long* pace){
+	if(at == 0)
+	{
+		write(fd, build_str, size);
+		write(fd, "\n", 1);
+		*num_words = *num_words + 1;
+		if(*num_words == *pace){
+			progress_data("Total words: ", *num_words, total_words);
+			*pace = *pace + ( 0.05 * total_words);
+		}
+	}
+	else {
+		char c = *str;
+		struct CharOptions* chars = get_char_options(c);
+		str = str + 1;
+		at = at - 1;
+		for(int i=0; i< chars->size-1; i=i+1){
+			build_str[size-at-1] = (chars->options)[i];
+			perm_rec_to_file(str, build_str, at, size, 
+					total_words, num_words, pace);
 		}
 	}
 
@@ -198,7 +270,7 @@ void stable_main(int argc, char *argv[]){
           	{0, 0, 0, 0}
         };
 
-  	while ((c = getopt_long (argc, argv, "we:", long_options, &option_index)))
+  	while ((c = getopt_long (argc, argv, "e:", long_options, &option_index)))
     	{
       		if (c == -1)
         		break;
@@ -224,7 +296,6 @@ void stable_main(int argc, char *argv[]){
 				}
 			}
 			case '?':
-          			/* getopt_long already printed an error message. */
           			break;
         		default:
 				print_usage();
@@ -237,24 +308,31 @@ void stable_main(int argc, char *argv[]){
       		while (optind < argc){
 			char* str = argv[optind++];
 		        int size = strlen(str) + 1;
+			FILE *fp;
 			if(flag_save){
-				printf("%d\n", flag_save);
   				char str2[strlen(str)+size];
 				sprintf(str2, "permutation_%s.txt", str);
-			  	FILE *fp = fopen(str2, "a");
+			  	fp = fopen(str2, "a");
   				use_file(fp);
+				if(fd != 1) {
+					printf("Writing to the file: %s\n", str2);
+				}
 			}
 			// the size with the null byte
 			unsigned long op = number_of_options(str, size-1);
 			printf("Starting p of %s with %lu options\n", str, op);
-			if(op < 10000){
-				permutation_recursion(str, size);
+			if(op < 1000000){
+				permutation_recursion(str, size, op);
 			}
 			else{
-				struct LinkedList* linked_list = permutation(str, size);
+				struct LinkedList* linked_list = permutation(str, size, op);
 				print_list(linked_list, fd);
 				delete_list(linked_list);
-			}	
+			}
+			if(fd != 1) {
+				fclose(fp);
+				printf("\n");
+			}
 		}
 		
     	}
