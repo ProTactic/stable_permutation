@@ -1,4 +1,4 @@
 Organize the code, refactoring.
 Optimize the code of liked list and its print by adding size for each string in the link struct.
 Improve the makefile.
-Implement progressBar for long strings.
+Implement progressBar for writing to file using likedlist option.
